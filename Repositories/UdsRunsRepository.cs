@@ -14,28 +14,36 @@ public class UdsRunsRepository
         _ordersRepository = ordersRepository;
     }
 
-    public List<UdsRunModel> GetUdsRuns()
+    private IQueryable<UdsRunModel> JoinWithStatusDescription(IQueryable<UdsRunModel> udsRunQuery)
     {
-        return _db.UdsRuns
-            .Join(_db.StatusModels,
-                    udsRun => udsRun.StatusId,
-                    status => status.Id,
-                    (udsRun, status) => new UdsRunModel()
-                    {
-                        Id = udsRun.Id,
-                        OrderId = udsRun.OrderId,
-                        StartTime = udsRun.StartTime,
-                        EndTime = udsRun.EndTime,
-                        Status = status.Description,
-                    }
-                 )
-            .Where(e => e.StatusId == (int)StatusDecription.Active && e.EndTime > DateTime.Now)
-            .ToList();
+        return udsRunQuery.Join(_db.StatusModels,
+                udsRun => udsRun.StatusId,
+                status => status.Id,
+                (udsRun, status) => new UdsRunModel()
+                {
+                    Id = udsRun.Id,
+                    OrderId = udsRun.OrderId,
+                    StartTime = udsRun.StartTime,
+                    EndTime = udsRun.EndTime,
+                    StatusDescription = status.Description,
+                }
+             );
     }
 
-    public UdsRunModel GetUdsRun(int id)
+    public List<UdsRunModel> GetUdsRuns()
     {
-        return _db.UdsRuns.Where(e => e.Id == id).FirstOrDefault();
+        return [.. JoinWithStatusDescription(_db.UdsRuns.Where(e => e.EndTime > DateTime.Now))];
+    }
+
+    public List<UdsRunModel> GetUdsOrderRuns(int orderId)
+    {
+        return [.. JoinWithStatusDescription(_db.UdsRuns.Where(e => e.EndTime > DateTime.Now && e.OrderId == orderId))];
+    }
+
+    public UdsRunModel GetValidUdsRun(int id)
+    {
+        return JoinWithStatusDescription(_db.UdsRuns.Where(e => e.EndTime > DateTime.Now && e.Id == id))
+            .FirstOrDefault();
     }
 
     public bool TryRestartRun(ref UdsRunModel runModel)

@@ -62,6 +62,12 @@ public class UdsOrdersController : UdsController
             return ServerError("Failed to delete an order");
         }
 
+        List<UdsRunModel> runs = _runsRepository.GetUdsOrderRuns(id);
+        if (!_runsRepository.TryCancelRuns(runs))
+        {
+            return ServerError("Order was deleted but failed to cancel runs");
+        }
+
         return NoContent();
     }
 }

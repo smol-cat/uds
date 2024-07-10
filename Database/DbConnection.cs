@@ -27,7 +27,7 @@ public class DbConnection : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UdsOrderModel>();
-        modelBuilder.Entity<UdsRunModel>().Ignore(e => e.Status);
+        modelBuilder.Entity<UdsRunModel>().Ignore(e => e.StatusDescription);
     }
 
     public bool TrySaveChanges()

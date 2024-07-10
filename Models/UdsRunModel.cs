@@ -21,9 +21,7 @@ public class UdsRunModel
 
     [Required, ForeignKey("fk_run_statusId")]
     [JsonIgnore]
-    public int? StatusId { get; set; }
+    public int StatusId { get; set; }
 
-    public string Status { get; set; }
-
-    public UdsRunModel() { }
+    public string StatusDescription { get; set; }
 }
