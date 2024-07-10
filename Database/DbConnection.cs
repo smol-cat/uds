@@ -5,7 +5,7 @@ namespace Uds.Database;
 
 public class DbConnection : DbContext
 {
-    static string _connectionString;
+    private static string _connectionString;
     private IConfiguration _configuration;
 
     public DbSet<UdsOrderModel> UdsOrders { get; set; }
@@ -19,7 +19,7 @@ public class DbConnection : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        string connectionString = $"server={_configuration["DB:host"]};port=3306;database={_configuration["DB:database"]};username={_configuration["DB:username"]};password={_configuration["DB:password"]};";
+        string connectionString = $"server={_configuration["DB:host"]};port={_configuration["DB:port"]};database={_configuration["DB:database"]};username={_configuration["DB:username"]};password={_configuration["DB:password"]};";
         ServerVersion serverVersion = ServerVersion.AutoDetect(connectionString);
         optionsBuilder.UseMySql(connectionString, serverVersion);
     }
@@ -27,6 +27,7 @@ public class DbConnection : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UdsOrderModel>();
+        modelBuilder.Entity<UdsRunModel>().Ignore(e => e.Status);
     }
 
     public bool TrySaveChanges()
@@ -39,6 +40,8 @@ public class DbConnection : DbContext
         catch (DbUpdateException e)
         {
             Console.WriteLine($"[DATABASE UPDATE ERROR]{e.Message}");
+            Console.WriteLine($"{e.InnerException?.Message}");
+            Console.WriteLine($"{e.StackTrace}");
             return false;
         }
     }

@@ -49,21 +49,19 @@ public class UdsRunsController : UdsController
     }
 
     [HttpPost]
-    [Route("{id}")]
-    public IActionResult StartOrder(UdsRunModel runModel)
+    public IActionResult StartOrder(UdsRunStartModel runModel)
     {
-        UdsRunModel runModel = _udsRunsRepository.GetUdsRun(id);
-        if (runModel == null)
+        UdsOrderModel orderModel = _udsOrdersRepository.GetOrder(runModel.OrderId);
+        if (orderModel == null)
         {
             return NotFound(new ServerErrorModel("Order run to restart was not found"));
         }
 
-        if (!_udsRunsRepository.TryRestartRun(ref runModel))
+        if (!_udsRunsRepository.TryStartRun(runModel))
         {
             return ServerError("Error occured while restarting the uds run");
         }
 
         return Ok(runModel);
     }
-
 }

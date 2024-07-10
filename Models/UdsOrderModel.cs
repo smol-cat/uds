@@ -24,7 +24,6 @@ public class UdsOrderModel
     [Required, StringLength(3)]
     public string Destination { get; set; }
 
+    [Required]
     public bool Deleted { get; set; }
-
-    public string ScheduleDescription { get; set; }
 }

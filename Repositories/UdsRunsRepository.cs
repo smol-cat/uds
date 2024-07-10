@@ -17,19 +17,19 @@ public class UdsRunsRepository
     public List<UdsRunModel> GetUdsRuns()
     {
         return _db.UdsRuns
-            .Where(e => e.StatusId == (int)StatusDecription.Active && e.EndTime > DateTime.Now)
-            .ToList();
-    }
-
-    public List<UdsRunModel> GetUdsOrderRuns(int udsOrder)
-    {
-        return _db.UdsRuns
             .Join(_db.StatusModels,
                     udsRun => udsRun.StatusId,
                     status => status.Id,
-                    (udsRun, status) => udsRun.StatusExtended(status)
+                    (udsRun, status) => new UdsRunModel()
+                    {
+                        Id = udsRun.Id,
+                        OrderId = udsRun.OrderId,
+                        StartTime = udsRun.StartTime,
+                        EndTime = udsRun.EndTime,
+                        Status = status.Description,
+                    }
                  )
-            .Where(e => e.OrderId == udsOrder && e.StatusId == (int)StatusDecription.Active)
+            .Where(e => e.StatusId == (int)StatusDecription.Active && e.EndTime > DateTime.Now)
             .ToList();
     }
 
@@ -57,17 +57,13 @@ public class UdsRunsRepository
 
     public bool TryStartRun(UdsRunStartModel runStartModel)
     {
-        UdsOrderModel orderToStart = _ordersRepository.GetOrder(runStartModel.OrderId);
-        if (orderToStart == null)
+        UdsRunModel runModel = new()
         {
-            return false;
-        }
-
-        UdsRunModel runModel = new();
-        runModel.OrderId = runStartModel.OrderId;
-        runModel.StartTime = DateTime.Now;
-        runModel.EndTime = DateTimeOffset.Now.AddDays(1).DateTime;
-        runModel.StatusId = (int)StatusDecription.Active;
+            OrderId = runStartModel.OrderId,
+            StartTime = DateTime.Now,
+            EndTime = DateTimeOffset.Now.AddDays(1).DateTime,
+            StatusId = (int)StatusDecription.Active
+        };
 
         _db.UdsRuns.Add(runModel);
         return _db.TrySaveChanges();

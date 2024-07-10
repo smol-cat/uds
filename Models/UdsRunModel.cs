@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Uds.Models;
 
@@ -19,16 +20,10 @@ public class UdsRunModel
     public DateTime EndTime { get; set; }
 
     [Required, ForeignKey("fk_run_statusId")]
+    [JsonIgnore]
     public int? StatusId { get; set; }
 
     public string Status { get; set; }
 
     public UdsRunModel() { }
-
-    public UdsRunModel StatusExtended(StatusModel status)
-    {
-        StatusId = null;
-        Status = status.Description;
-        return this;
-    }
 }
