@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Uds.Models;
+using Uds.Models.Database;
+using Uds.Models.Request;
 using Uds.Repositories;
 
 namespace Uds.Controllers;
@@ -24,7 +26,7 @@ public class UdsOrdersController : UdsController
         UdsOrderModel order = _ordersRepository.GetOrder(id);
         if (order == null)
         {
-            return NotFound();
+            return NotFound(new ServerErrorModel("Order was not found"));
         }
 
         return Ok(order);
@@ -37,14 +39,14 @@ public class UdsOrdersController : UdsController
     }
 
     [HttpPost]
-    public IActionResult CreateOrder(UdsOrderModel order)
+    public IActionResult CreateOrder(UdsOrderCreateModel order)
     {
         if (!_ordersRepository.TryCreateOrder(order))
         {
             return ServerError("Could not create an order");
         }
 
-        return NoContent();
+        return CommitedChangesResult(NoContent(), _ordersRepository);
     }
 
     [HttpDelete]
@@ -62,12 +64,12 @@ public class UdsOrdersController : UdsController
             return ServerError("Failed to delete an order");
         }
 
-        List<UdsRunModel> runs = _runsRepository.GetUdsOrderRuns(id);
-        if (!_runsRepository.TryCancelRuns(runs))
+        List<UdsRunModel> runs = _runsRepository.GetValidUdsOrderRuns(id);
+        if (!_runsRepository.TryDeleteRuns(runs))
         {
-            return ServerError("Order was deleted but failed to cancel runs");
+            return ServerError("Failed to delete order runs");
         }
 
-        return NoContent();
+        return CommitedChangesResult(NoContent(), _ordersRepository);
     }
 }

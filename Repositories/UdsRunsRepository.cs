@@ -1,22 +1,24 @@
 using Uds.Database;
 using Uds.Models;
+using Uds.Models.Database;
+using Uds.Models.Request;
 
 namespace Uds.Repositories;
 
-public class UdsRunsRepository
+public class UdsRunsRepository : BaseRepository
 {
-    private DbConnection _db;
     private UdsOrdersRepository _ordersRepository;
 
-    public UdsRunsRepository(DbConnection db, UdsOrdersRepository ordersRepository)
+    public UdsRunsRepository(DbConnection db, UdsOrdersRepository ordersRepository) : base(db)
     {
-        _db = db;
         _ordersRepository = ordersRepository;
     }
 
     private IQueryable<UdsRunModel> JoinWithStatusDescription(IQueryable<UdsRunModel> udsRunQuery)
     {
-        return udsRunQuery.Join(_db.StatusModels,
+        return udsRunQuery
+            .Where(e => !e.Deleted)
+            .Join(_db.StatusModels,
                 udsRun => udsRun.StatusId,
                 status => status.Id,
                 (udsRun, status) => new UdsRunModel()
@@ -25,7 +27,7 @@ public class UdsRunsRepository
                     OrderId = udsRun.OrderId,
                     StartTime = udsRun.StartTime,
                     EndTime = udsRun.EndTime,
-                    StatusDescription = status.Description,
+                    Status = status.Description,
                 }
              );
     }
@@ -35,9 +37,23 @@ public class UdsRunsRepository
         return [.. JoinWithStatusDescription(_db.UdsRuns.Where(e => e.EndTime > DateTime.Now))];
     }
 
-    public List<UdsRunModel> GetUdsOrderRuns(int orderId)
+    public List<UdsRunModel> GetValidUdsOrderRuns(int orderId)
     {
         return [.. JoinWithStatusDescription(_db.UdsRuns.Where(e => e.EndTime > DateTime.Now && e.OrderId == orderId))];
+    }
+
+    public List<UdsRunModel> GetActiveUdsOrderRuns(int orderId)
+    {
+        return [.. JoinWithStatusDescription(_db.UdsRuns.Where(e =>
+                    e.StatusId == (int)StatusDecription.Active
+                    && e.EndTime > DateTime.Now
+                    && e.OrderId == orderId))];
+    }
+
+    public UdsRunModel GetUdsRun(int id)
+    {
+        return JoinWithStatusDescription(_db.UdsRuns.Where(e => e.Id == id))
+            .FirstOrDefault();
     }
 
     public UdsRunModel GetValidUdsRun(int id)
@@ -46,24 +62,44 @@ public class UdsRunsRepository
             .FirstOrDefault();
     }
 
-    public bool TryRestartRun(ref UdsRunModel runModel)
+    public bool TryPatchRun(UdsRunModel runModel, UdsRunPatchModel patchModel)
     {
-        runModel.StartTime = DateTime.Now;
-        runModel.EndTime = DateTimeOffset.Now.AddDays(1).DateTime;
-        runModel.StatusId = (int)StatusDecription.Active;
+        switch (patchModel.Action)
+        {
+            case OrderAction.Restart:
+                runModel.StatusId = (int)StatusDecription.Active;
+                runModel.StartTime = DateTime.Now;
+                runModel.EndTime = DateTimeOffset.Now.AddDays(1).DateTime;
+                break;
+            case OrderAction.Cancel:
+                runModel.StatusId = (int)StatusDecription.Canceled;
+                runModel.EndTime = DateTime.Now;
+                break;
+            case OrderAction.End:
+                runModel.StatusId = (int)StatusDecription.Ended;
+                runModel.EndTime = DateTime.Now;
+                break;
+            default:
+                return false;
+        }
 
         _db.UdsRuns.Update(runModel);
-        return _db.TrySaveChanges();
+        return true;
     }
 
-    public bool TryCancelRuns(List<UdsRunModel> modelsToCancel)
+    public bool TryDeleteRuns(List<UdsRunModel> modelsToCancel)
     {
-        modelsToCancel.ForEach(e => e.StatusId = (int)StatusDecription.Canceled);
+        modelsToCancel.ForEach(e =>
+        {
+            e.StatusId = (int)StatusDecription.Canceled;
+            e.Deleted = true;
+        });
+
         _db.UdsRuns.UpdateRange(modelsToCancel);
-        return _db.TrySaveChanges();
+        return true;
     }
 
-    public bool TryStartRun(UdsRunStartModel runStartModel)
+    public bool TryStartRun(UdsRunStartModel runStartModel, out UdsRunModel modelCreated)
     {
         UdsRunModel runModel = new()
         {
@@ -73,7 +109,9 @@ public class UdsRunsRepository
             StatusId = (int)StatusDecription.Active
         };
 
+        modelCreated = runModel;
         _db.UdsRuns.Add(runModel);
-        return _db.TrySaveChanges();
+
+        return true;
     }
 }

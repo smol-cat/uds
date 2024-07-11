@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+using Uds.Models.Request;
 
 namespace Uds.Models;
 
@@ -18,12 +20,24 @@ public class UdsOrderModel
     [Required]
     public int ScheduleId { get; set; }
 
-    [Required, StringLength(3)]
+    [Required, MinLength(3), MaxLength(3)]
     public string Origin { get; set; }
 
-    [Required, StringLength(3)]
+    [Required, MinLength(3), MaxLength(3)]
     public string Destination { get; set; }
 
     [Required]
+    [JsonIgnore]
     public bool Deleted { get; set; }
+
+    public UdsOrderModel() { }
+
+    public UdsOrderModel(UdsOrderCreateModel createModel)
+    {
+        ProfileId = createModel.ProfileId;
+        BookingSiteId = createModel.BookingSiteId;
+        ScheduleId = createModel.ScheduleId;
+        Origin = createModel.Origin;
+        Destination = createModel.Destination;
+    }
 }

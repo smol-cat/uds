@@ -1,20 +1,13 @@
 using Uds.Database;
 using Uds.Models;
+using Uds.Models.Request;
 
 namespace Uds.Repositories;
 
-public interface IUdsOrderRepository
+public class UdsOrdersRepository : BaseRepository
 {
-    List<UdsOrderModel> GetUdsOrders();
-}
-
-public class UdsOrdersRepository : IUdsOrderRepository
-{
-    private DbConnection _db;
-
-    public UdsOrdersRepository(DbConnection db)
+    public UdsOrdersRepository(DbConnection db) : base(db)
     {
-        _db = db;
     }
 
     public List<UdsOrderModel> GetUdsOrders()
@@ -24,28 +17,19 @@ public class UdsOrdersRepository : IUdsOrderRepository
 
     public UdsOrderModel GetOrder(int id)
     {
-        return _db.UdsOrders.Where(e => e.Id == id).FirstOrDefault();
+        return _db.UdsOrders.Where(e => e.Id == id && e.Deleted == false).FirstOrDefault();
     }
 
     public bool TryDeleteOrder(UdsOrderModel orderToDelete)
     {
         orderToDelete.Deleted = true;
         _db.UdsOrders.Update(orderToDelete);
-        return _db.TrySaveChanges();
+        return true;
     }
 
-    public bool TryCreateOrder(UdsOrderModel order)
+    public bool TryCreateOrder(UdsOrderCreateModel order)
     {
-        try
-        {
-            _db.UdsOrders.Add(order);
-            _db.SaveChanges();
-            return true;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-            return false;
-        }
+        _db.UdsOrders.Add(new UdsOrderModel(order));
+        return true;
     }
 }

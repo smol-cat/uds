@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using server.Controllers.ObjectResults;
+using Uds.Repositories;
 
 namespace Uds.Controllers;
 
@@ -13,6 +14,11 @@ public class UdsController : ControllerBase
     public override OkObjectResult Ok(object? value)
     {
         return base.Ok(value);
+    }
+
+    protected IActionResult CommitedChangesResult(IActionResult defaultResult, BaseRepository respository)
+    {
+        return respository.TrySaveChanges() ? defaultResult : ServerError("Error occured while trying to save changes to the database");
     }
 
     [NonAction]

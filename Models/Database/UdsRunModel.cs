@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
-namespace Uds.Models;
+namespace Uds.Models.Database;
 
 [Table("run")]
 public class UdsRunModel
@@ -23,5 +23,9 @@ public class UdsRunModel
     [JsonIgnore]
     public int StatusId { get; set; }
 
-    public string StatusDescription { get; set; }
+    [Required]
+    [JsonIgnore]
+    public bool Deleted { get; set; }
+
+    public string Status { get; set; }
 }

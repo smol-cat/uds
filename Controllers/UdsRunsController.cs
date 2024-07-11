@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Uds.Models;
+using Uds.Models.Database;
+using Uds.Models.Request;
 using Uds.Repositories;
 
 namespace Uds.Controllers;
@@ -21,7 +23,13 @@ public class UdsRunsController : UdsController
     [Route("{id}")]
     public IActionResult Get(int id)
     {
-        return Ok(_udsRunsRepository.GetUdsRun(id));
+        var udsRun = _udsRunsRepository.GetValidUdsRun(id);
+        if (udsRun == null)
+        {
+            return NotFound(new ServerErrorModel("Order run was not found"));
+        }
+
+        return Ok();
     }
 
     [HttpGet]
@@ -31,21 +39,20 @@ public class UdsRunsController : UdsController
     }
 
     [HttpPatch]
-    [Route("{id}")]
-    public IActionResult RestartOrder(int id)
+    public IActionResult PatchOrderRun(UdsRunPatchModel patchModel)
     {
-        UdsRunModel runModel = _udsRunsRepository.GetUdsRun(id);
+        UdsRunModel runModel = _udsRunsRepository.GetValidUdsRun(patchModel.Id);
         if (runModel == null)
         {
             return NotFound(new ServerErrorModel("Order run to restart was not found"));
         }
 
-        if (!_udsRunsRepository.TryRestartRun(ref runModel))
+        if (!_udsRunsRepository.TryPatchRun(runModel, patchModel))
         {
             return ServerError("Error occured while restarting the uds run");
         }
 
-        return Ok(runModel);
+        return CommitedChangesResult(Ok(runModel), _udsRunsRepository);
     }
 
     [HttpPost]
@@ -54,14 +61,14 @@ public class UdsRunsController : UdsController
         UdsOrderModel orderModel = _udsOrdersRepository.GetOrder(runModel.OrderId);
         if (orderModel == null)
         {
-            return NotFound(new ServerErrorModel("Order run to restart was not found"));
+            return NotFound(new ServerErrorModel("Order to start the run for was not found"));
         }
 
-        if (!_udsRunsRepository.TryStartRun(runModel))
+        if (!_udsRunsRepository.TryStartRun(runModel, out UdsRunModel createdRun))
         {
-            return ServerError("Error occured while restarting the uds run");
+            return ServerError("Error occured while starting the uds run");
         }
 
-        return Ok(runModel);
+        return CommitedChangesResult(Ok(createdRun), _udsRunsRepository);
     }
 }

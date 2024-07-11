@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Uds.Models;
+using Uds.Models.Database;
 
 namespace Uds.Database;
 
@@ -27,7 +28,7 @@ public class DbConnection : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UdsOrderModel>();
-        modelBuilder.Entity<UdsRunModel>().Ignore(e => e.StatusDescription);
+        modelBuilder.Entity<UdsRunModel>().Ignore(e => e.Status);
     }
 
     public bool TrySaveChanges()
