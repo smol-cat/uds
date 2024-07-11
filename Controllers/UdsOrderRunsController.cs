@@ -4,7 +4,7 @@ using Uds.Repositories;
 namespace Uds.Controllers;
 
 [ApiController]
-[Route("/api/udsOrders/{orderId}/udsRuns")]
+[Route("/api/uds/orders/{orderId}/runs")]
 public class UdsOrderRunsController : UdsController
 {
     private UdsOrdersRepository _ordersRepository;

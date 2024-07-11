@@ -14,6 +14,8 @@ internal class Program
 
         builder.Services.AddScoped<UdsOrdersRepository>();
         builder.Services.AddScoped<UdsRunsRepository>();
+        builder.Services.AddScoped<BookingSitesRepository>();
+        builder.Services.AddScoped<ScheduleRepository>();
 
         builder.Services.AddControllers();
 

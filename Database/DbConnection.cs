@@ -6,12 +6,17 @@ namespace Uds.Database;
 
 public class DbConnection : DbContext
 {
-    private static string _connectionString;
-    private IConfiguration _configuration;
+    private readonly IConfiguration _configuration;
 
     public DbSet<UdsOrderModel> UdsOrders { get; set; }
+
     public DbSet<UdsRunModel> UdsRuns { get; set; }
-    public DbSet<StatusModel> StatusModels { get; set; }
+
+    public DbSet<StatusModel> Statuses { get; set; }
+
+    public DbSet<BookingSiteModel> BookingSites { get; set; }
+
+    public DbSet<ScheduleModel> Schedules { get; set; }
 
     public DbConnection(IConfiguration configuration)
     {
@@ -27,7 +32,10 @@ public class DbConnection : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<UdsOrderModel>();
+        modelBuilder.Entity<UdsOrderModel>()
+            .Ignore(e => e.BookingSite)
+            .Ignore(e => e.Schedule);
+
         modelBuilder.Entity<UdsRunModel>().Ignore(e => e.Status);
     }
 

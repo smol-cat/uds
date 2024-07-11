@@ -18,7 +18,7 @@ public class UdsRunsRepository : BaseRepository
     {
         return udsRunQuery
             .Where(e => !e.Deleted)
-            .Join(_db.StatusModels,
+            .Join(_db.Statuses,
                 udsRun => udsRun.StatusId,
                 status => status.Id,
                 (udsRun, status) => new UdsRunModel()
@@ -34,20 +34,12 @@ public class UdsRunsRepository : BaseRepository
 
     public List<UdsRunModel> GetUdsRuns()
     {
-        return [.. JoinWithStatusDescription(_db.UdsRuns.Where(e => e.EndTime > DateTime.Now))];
+        return [.. JoinWithStatusDescription(_db.UdsRuns)];
     }
 
     public List<UdsRunModel> GetValidUdsOrderRuns(int orderId)
     {
         return [.. JoinWithStatusDescription(_db.UdsRuns.Where(e => e.EndTime > DateTime.Now && e.OrderId == orderId))];
-    }
-
-    public List<UdsRunModel> GetActiveUdsOrderRuns(int orderId)
-    {
-        return [.. JoinWithStatusDescription(_db.UdsRuns.Where(e =>
-                    e.StatusId == (int)StatusDecription.Active
-                    && e.EndTime > DateTime.Now
-                    && e.OrderId == orderId))];
     }
 
     public UdsRunModel GetUdsRun(int id)
@@ -99,7 +91,7 @@ public class UdsRunsRepository : BaseRepository
         return true;
     }
 
-    public bool TryStartRun(UdsRunStartModel runStartModel, out UdsRunModel modelCreated)
+    public bool TryStartRun(UdsRunStartModel runStartModel, out UdsRunModel createdRun)
     {
         UdsRunModel runModel = new()
         {
@@ -109,9 +101,8 @@ public class UdsRunsRepository : BaseRepository
             StatusId = (int)StatusDecription.Active
         };
 
-        modelCreated = runModel;
         _db.UdsRuns.Add(runModel);
-
+        createdRun = runModel;
         return true;
     }
 }

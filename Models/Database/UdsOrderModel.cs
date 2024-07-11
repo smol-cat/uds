@@ -12,12 +12,14 @@ public class UdsOrderModel
     public int Id { get; set; }
 
     [Required]
+    [JsonIgnore]
     public int BookingSiteId { get; set; }
 
     [Required]
     public string ProfileId { get; set; }
 
     [Required]
+    [JsonIgnore]
     public int ScheduleId { get; set; }
 
     [Required, MinLength(3), MaxLength(3)]
@@ -29,6 +31,9 @@ public class UdsOrderModel
     [Required]
     [JsonIgnore]
     public bool Deleted { get; set; }
+
+    public BookingSiteModel BookingSite { get; set; }
+    public ScheduleModel Schedule { get; set; }
 
     public UdsOrderModel() { }
 

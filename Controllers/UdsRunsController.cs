@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using server.Controllers.ObjectResults;
 using Uds.Models;
 using Uds.Models.Database;
 using Uds.Models.Request;
@@ -7,7 +8,7 @@ using Uds.Repositories;
 namespace Uds.Controllers;
 
 [ApiController]
-[Route("/api/udsRuns")]
+[Route("/api/uds/runs")]
 public class UdsRunsController : UdsController
 {
     private UdsOrdersRepository _udsOrdersRepository;
@@ -64,11 +65,23 @@ public class UdsRunsController : UdsController
             return NotFound(new ServerErrorModel("Order to start the run for was not found"));
         }
 
-        if (!_udsRunsRepository.TryStartRun(runModel, out UdsRunModel createdRun))
+        if (!_udsRunsRepository.TryStartRun(runModel, out UdsRunModel udsRunModel))
         {
             return ServerError("Error occured while starting the uds run");
         }
 
-        return CommitedChangesResult(Ok(createdRun), _udsRunsRepository);
+        IActionResult result = CommitedChangesResult(Ok(), _udsRunsRepository);
+        if (result is ServerErrorObjectResult)
+        {
+            return result;
+        }
+
+        UdsRunModel createdRun = _udsRunsRepository.GetUdsRun(udsRunModel.Id);
+        if (createdRun == null)
+        {
+            return ServerError("Failed to create a uds run");
+        }
+
+        return Ok(createdRun);
     }
 }

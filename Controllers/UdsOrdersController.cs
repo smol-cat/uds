@@ -7,16 +7,24 @@ using Uds.Repositories;
 namespace Uds.Controllers;
 
 [ApiController]
-[Route("/api/udsOrders")]
+[Route("/api/uds/orders")]
 public class UdsOrdersController : UdsController
 {
     private UdsOrdersRepository _ordersRepository;
     private UdsRunsRepository _runsRepository;
+    private BookingSitesRepository _bookingSitesRepository;
+    private ScheduleRepository _scheduleRepository;
 
-    public UdsOrdersController(UdsOrdersRepository ordersRepository, UdsRunsRepository runsRepository)
+    public UdsOrdersController(
+            UdsOrdersRepository ordersRepository,
+            UdsRunsRepository runsRepository,
+            BookingSitesRepository bookingSitesRepository,
+            ScheduleRepository scheduleRepository)
     {
         _ordersRepository = ordersRepository;
         _runsRepository = runsRepository;
+        _bookingSitesRepository = bookingSitesRepository;
+        _scheduleRepository = scheduleRepository;
     }
 
     [HttpGet]
@@ -41,6 +49,16 @@ public class UdsOrdersController : UdsController
     [HttpPost]
     public IActionResult CreateOrder(UdsOrderCreateModel order)
     {
+        if (!_bookingSitesRepository.BookingSiteExists(order.BookingSiteId))
+        {
+            return NotFound(new ServerErrorModel("Booking site specified was not found"));
+        }
+
+        if (!_scheduleRepository.ScheduleExists(order.ScheduleId))
+        {
+            return NotFound(new ServerErrorModel("Schedule specified was not found"));
+        }
+
         if (!_ordersRepository.TryCreateOrder(order))
         {
             return ServerError("Could not create an order");

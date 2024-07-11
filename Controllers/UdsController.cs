@@ -16,6 +16,7 @@ public class UdsController : ControllerBase
         return base.Ok(value);
     }
 
+    [NonAction]
     protected IActionResult CommitedChangesResult(IActionResult defaultResult, BaseRepository respository)
     {
         return respository.TrySaveChanges() ? defaultResult : ServerError("Error occured while trying to save changes to the database");

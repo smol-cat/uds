@@ -10,14 +10,30 @@ public class UdsOrdersRepository : BaseRepository
     {
     }
 
+    private IQueryable<UdsOrderModel> Extend(IQueryable<UdsOrderModel> other)
+    {
+        return from order in other
+               join bookingSite in _db.BookingSites on order.BookingSiteId equals bookingSite.Id
+               join schedule in _db.Schedules on order.ScheduleId equals schedule.Id
+               select new UdsOrderModel
+               {
+                   Id = order.Id,
+                   ProfileId = order.ProfileId,
+                   Schedule = schedule,
+                   Origin = order.Origin,
+                   Destination = order.Destination,
+                   BookingSite = bookingSite,
+               };
+    }
+
     public List<UdsOrderModel> GetUdsOrders()
     {
-        return _db.UdsOrders.Where(e => e.Deleted == false).ToList();
+        return [.. Extend(_db.UdsOrders.Where(e => e.Deleted == false))];
     }
 
     public UdsOrderModel GetOrder(int id)
     {
-        return _db.UdsOrders.Where(e => e.Id == id && e.Deleted == false).FirstOrDefault();
+        return Extend(_db.UdsOrders.Where(e => e.Id == id && e.Deleted == false)).FirstOrDefault();
     }
 
     public bool TryDeleteOrder(UdsOrderModel orderToDelete)
