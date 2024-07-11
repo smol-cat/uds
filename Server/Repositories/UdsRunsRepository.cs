@@ -27,6 +27,7 @@ public class UdsRunsRepository : BaseRepository
                     OrderId = udsRun.OrderId,
                     StartTime = udsRun.StartTime,
                     EndTime = udsRun.EndTime,
+                    StatusId = udsRun.StatusId,
                     Status = status.Description,
                 }
              );
@@ -83,7 +84,6 @@ public class UdsRunsRepository : BaseRepository
     {
         modelsToCancel.ForEach(e =>
         {
-            e.StatusId = (int)StatusDecription.Canceled;
             e.Deleted = true;
         });
 

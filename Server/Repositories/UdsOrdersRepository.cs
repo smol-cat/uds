@@ -19,10 +19,12 @@ public class UdsOrdersRepository : BaseRepository
                {
                    Id = order.Id,
                    ProfileId = order.ProfileId,
-                   Schedule = schedule,
+                   ScheduleId = order.ScheduleId,
+                   BookingSiteId = order.BookingSiteId,
                    Origin = order.Origin,
                    Destination = order.Destination,
                    BookingSite = bookingSite,
+                   Schedule = schedule,
                };
     }
 

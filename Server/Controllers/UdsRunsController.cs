@@ -42,7 +42,7 @@ public class UdsRunsController : UdsController
     [HttpPatch]
     public IActionResult PatchOrderRun(UdsRunPatchModel patchModel)
     {
-        UdsRunModel runModel = _udsRunsRepository.GetValidUdsRun(patchModel.Id);
+        UdsRunModel runModel = _udsRunsRepository.GetUdsRun(patchModel.Id);
         if (runModel == null)
         {
             return NotFound(new ServerErrorModel("Order run to restart was not found"));
@@ -53,7 +53,14 @@ public class UdsRunsController : UdsController
             return ServerError("Error occured while restarting the uds run");
         }
 
-        return CommitedChangesResult(Ok(runModel), _udsRunsRepository);
+        IActionResult actionResult = CommitedChangesResult(Ok(), _udsRunsRepository);
+        if (actionResult is ServerErrorObjectResult)
+        {
+            return actionResult;
+        }
+
+        UdsRunModel updatedModel = _udsRunsRepository.GetUdsRun(patchModel.Id);
+        return CommitedChangesResult(Ok(updatedModel), _udsRunsRepository);
     }
 
     [HttpPost]
